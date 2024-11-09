@@ -3,17 +3,19 @@ const container = document.querySelector(".container");
 const input = document.querySelector("input");
 
 class Task {
-  constructor(task) {
+  constructor(id, task) {
+    this.id = id;
     this.task = task;
   }
 }
 class UI {
   constructor() {}
 
-  addTask(task) {
+  addTask(taskObj) {
     const p = document.createElement("p");
-    p.innerText = task;
+    p.innerText = taskObj.task;
     p.classList.add("task");
+    p.dataset.id = taskObj.id;
     container.appendChild(p);
     input.value = "";
   }
@@ -31,21 +33,35 @@ class UI {
   }
 }
 
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let idTask = tasks.length > 0 ? tasks[tasks.length - 1].id + 1 : 0;
+
+const ui = new UI();
+tasks.forEach((task) => ui.addTask(task));
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const inputValue = input.value;
-
-  const ui = new UI();
-
   if (inputValue === "") {
     ui.displayAlert("Please enter task.", "error");
+    return;
   } else {
-    ui.addTask(inputValue);
+    const task = new Task(idTask, inputValue);
+    idTask++;
+    ui.addTask(task);
+    tasks.push(task);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
     ui.displayAlert("Task added", "success");
   }
 });
 container.addEventListener("click", (event) => {
-  const ui = new UI();
-  ui.removeTask(event.target);
-  ui.displayAlert("Task removed succesfully", "success");
+  if (event.target.classList.contains("task")) {
+    const taskId = parseInt(event.target.dataset.id);
+    console.log(taskId);
+    ui.removeTask(event.target);
+    tasks = tasks.filter((task) => task.id !== taskId);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    ui.displayAlert("Task removed succesfully", "success");
+    idTask--;
+  }
 });
